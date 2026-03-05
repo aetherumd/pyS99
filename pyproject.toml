@@ -1,0 +1,23 @@
+[project]
+name = "pys99"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10.4"
+dependencies = [
+    "astropy>=6.1.7",
+    "matplotlib>=3.10.8",
+    "merlin-spectra>=0.0.13",
+    "numpy>=2.2.6",
+    "scipy>=1.15.3",
+    "yt>=4.3.1",
+]
+
+[dependency-groups]
+dev = [
+    "black>=26.1.0",
+    "ipython>=8.38.0",
+    "jupyter>=1.1.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.4",
+]
