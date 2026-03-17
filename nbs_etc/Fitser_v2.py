@@ -246,7 +246,7 @@ class JWST_disperser:
         plt.plot(wave_hr, conv_flux_hr, color="blue", lw=1, label="After LSF convolution")
         plt.step(pix_centers, binned_flux, where="mid", color="red", label="Binned to NIRSpec pixels")
         plt.xlabel("Wavelength (μm)")
-        plt.ylabel("Flux (arb. units)")
+        plt.ylabel(r"Flux \muJy")
         plt.title(f"JWST NIRSpec Resolution & Binning ({dispname})")
         plt.legend()
         plt.tight_layout()
