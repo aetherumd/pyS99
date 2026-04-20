@@ -59,6 +59,7 @@ def gaussian_spectrum_from_integrated_flux_erg(
     return S_total
 
 if __name__ == "__main__":
+    import re
     wavelengths = np.array([
         6562.80, 1304.86, 6300.30, 3728.80, 3726.10,
         1660.81, 1666.15, 4363.21, 4958.91, 5006.84,
@@ -76,6 +77,14 @@ if __name__ == "__main__":
         6.7158908e25, 3.00994268e21, 9.13560277e20, 0.0,
         0.0, 0.0, 1.90161008e21, 1.01859885e26, 7.02687477e25
     ])
+
+    ashiq_in = "unyt_quantity(1.45297765e+39, 'cm**(-3)'), unyt_quantity(8.97463982e+31, 'cm**(-3)'), unyt_quantity(1.36882452e+34, 'cm**(-3)'), unyt_quantity(3.52808024e+34, 'cm**(-3)'), unyt_quantity(2.72519332e+34, 'cm**(-3)'), unyt_quantity(4.49457814e+31, 'cm**(-3)'), unyt_quantity(1.31624231e+32, 'cm**(-3)'), unyt_quantity(3.93634382e+31, 'cm**(-3)'), unyt_quantity(3.32020556e+32, 'cm**(-3)'), unyt_quantity(9.9060586e+32, 'cm**(-3)'), unyt_quantity(1.0549357e+34, 'cm**(-3)'), unyt_quantity(1.93802964e+32, 'cm**(-3)'), unyt_quantity(1.71747298e+33, 'cm**(-3)'), unyt_quantity(1.11501585e+33, 'cm**(-3)'), unyt_quantity(8.32327063e+28, 'cm**(-3)'), unyt_quantity(3.922054e+34, 'cm**(-3)'), unyt_quantity(1.98474348e+34, 'cm**(-3)'), unyt_quantity(2.19550288e+31, 'cm**(-3)'), unyt_quantity(6.66373684e+30, 'cm**(-3)'), unyt_quantity(4.93719524e+31, 'cm**(-3)'), unyt_quantity(2.46248953e+31, 'cm**(-3)'), unyt_quantity(2.23667185e+29, 'cm**(-3)'), unyt_quantity(7.14361445e+31, 'cm**(-3)'), unyt_quantity(4.39563797e+34, 'cm**(-3)'), unyt_quantity(3.47217011e+34, 'cm**(-3)')"
+    pattern = re.compile(r"\d+e\+\d+")
+    hits = pattern.findall(ashiq_in)
+
+    ### CHANGE this is a modification to use ashiqs input (crude because of formate but...) ###
+    F_values = hits
+    print(len(hits), len(F_values))
 
     z_test = 8.033
 
