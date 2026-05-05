@@ -1,3 +1,4 @@
 sim_viz/
 graphs/
 .DS_store
+__pycache__/
