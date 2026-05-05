@@ -5,7 +5,7 @@ import astropy.units as u
 
 # Script creates SED, need to figure out how to add these
 
-def sed_cont(dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/output/salpeter.spectrum1'):
+def sed_cont(dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/'):
     xx=4
     # wav = amstrong, y1 = erg/s/Amstrong
     # y1= 3  Myr
@@ -16,15 +16,17 @@ def sed_cont(dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/output/salpeter
     #NN=400
     dim=1221 #number of wavelength bins
     nrows=dim*NN 
-    #time,wav, y1 = np.loadtxt('output49291/Kroupa-lowmet1.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows) 
-    #time,wav, y1 = np.loadtxt('output15012/Kroupa.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
-    #time,wav, y1 = np.loadtxt('output61239/Kroupa-lowmet.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
-    #time,wav, y1 = np.loadtxt('output61239/Kroupa-lowmet.spectrum1', unpack=True, usecols=(0,n1,n2))
-    #time,wav, y1 = np.loadtxt('output38744/top-heavy.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
-    #time,wav, y1b = np.loadtxt('output54345/top-heavy-lowmet.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
-    #time,wav, y1 = np.loadtxt('output/salpeter.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows, skiprows = 6)
-    time,wav, y1 = np.loadtxt(dir_fil, unpack=True, usecols=(0,n1,n2),max_rows=nrows, skiprows = 6)
-    time=time/1e6
+    # time,wav, y1 = np.loadtxt(dir_fil + 'output49291/Kroupa-lowmet1.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows) 
+    # time,wav, y1 = np.loadtxt('output15012/Kroupa.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
+    # time,wav, y1 = np.loadtxt('output61239/Kroupa-lowmet.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
+    # time,wav, y1 = np.loadtxt('output61239/Kroupa-lowmet.spectrum1', unpack=True, usecols=(0,n1,n2))
+    # time,wav, y1 = np.loadtxt('output38744/top-heavy.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
+    # time,wav, y1b = np.loadtxt('output54345/top-heavy-lowmet.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows)
+    # time,wav, y1 = np.loadtxt('output/salpeter.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows, skiprows = 6)
+    time, wav, y1 = np.loadtxt(dir_fil + 'output/salpeter.spectrum1', unpack=True, usecols=(0,n1,n2),max_rows=nrows, skiprows = 6)
+
+    # Data format, time is in yrs, wav is in angstrom, y1 is in log erg/s/A
+    time=time/1e6 # get time into megayears
     imax=len(y1)/dim
     print(imax)
 
@@ -36,19 +38,19 @@ def sed_cont(dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/output/salpeter
             t0=566.0
             return 10.0*(t/t0)**-(2./3)-1.0
 
-    time0=590.0 #choose initial time
+    time0=590.0 #choose initial time, this is when the simulation starts???
     #time0=595.0
     redsh0=Hredshift(time0) #calc initial redshift
     time1=530.0 #choose final time
     redsh1=Hredshift(time1) #calc final redshift
     s99dir = "/Users/lamoreau/python/ASpec/Starburst99/"
     #redshift, star forming complex radius (pc), mass star formation complex (Msun), number density of hydrogen (units of cm^-3), metallicity (Zsun)
-    z1,ra,mass1,n_H,met=np.loadtxt(s99dir + 'logSFC-CCFid.txt',unpack=True, usecols=(2,4,5,8,9))
+    z1,ra,mass1,n_H,met=np.loadtxt(s99dir + 'logSFC-CCFid.txt',unpack=True, usecols=(2,4,5,8,9)) #this is what my sample is replacing
     z2,ra,mass2,n_H,met=np.loadtxt(s99dir + 'logSFC-low1.txt',unpack=True, usecols=(2,4,5,8,9))
     z3,ra,mass3,n_H,met=np.loadtxt(s99dir + 'logSFC-high1.txt',unpack=True, usecols=(2,4,5,8,9)) 
     Ht1=Htime(z1) #passes in a redshift array, get a time array out
     Ht2=Htime(z2)
-    Ht3=Htime(z3)
+    Ht3=Htime(z3) #this is information that we can get from the snapshot, but should be consistent
 
     run='CC-Fid'
     #run='SFE 0.70'
@@ -148,7 +150,7 @@ def sed_cont(dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/output/salpeter
     # convert to micro Jy: 1e-23 cgs
 
     # convert to uJy
-    mag=10.0
+    mag=1.0 # was 10
     nu=3e10/(wav*1e-8)
     conv=wav/nu
     y1_obs0=y1_obs0*conv/1e-29*mag*(1+redsh0)**2
@@ -156,7 +158,7 @@ def sed_cont(dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/output/salpeter
 
     y_tot0=np.zeros(dim-1)
     y_tot1=np.zeros(dim-1)
-    for ii in range(0,len(t0)-1):
+    for ii in range(0,len(t0)-1): #this is taking the desired time stamp and pulling out the correct wavelength
             i=int(t0[ii]/2.0)
             if (i >=0 and i<imax):
                 #print(ii,i)

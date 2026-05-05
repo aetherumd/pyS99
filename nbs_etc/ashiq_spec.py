@@ -11,6 +11,19 @@ def ergcm2s_to_jyhz(F_erg_cm2_s):
 
     return F_erg_cm2_s * 1e23
 
+def gaussian_adder(xarr, means, areas, sigmas): #I should add error handling for this
+        sigmas = np.atleast_1d(sigmas)
+        yarr = np.zeros_like(xarr)
+        if len(sigmas) == 1:
+            for i in range(len(means)):
+                yarr += areas[i] / (sigmas*np.sqrt(2*np.pi)) * np.exp(-((xarr - means[i])**2) / (2 * sigmas**2))
+        elif len(sigmas) == len(means):
+            for i in range(len(means)):
+                yarr += areas[i] / (sigmas[i]*np.sqrt(2*np.pi)) * np.exp(-((xarr - means[i])**2) / (2 * sigmas[i]**2))
+        else:
+             print("Shape mismatch for gaussian addition function")
+        return yarr
+
 def gaussian_spectrum_from_integrated_flux_erg(
     lambda_array: ndarray,          # wavelength grid (Å)
     line_cents_array: ndarray,      # line centers (Å)
@@ -58,6 +71,29 @@ def gaussian_spectrum_from_integrated_flux_erg(
 
     return S_total
 
+def gaussian_luminosity(
+    lambda_array: ndarray,          # wavelength grid (Å)
+    line_cents_array: ndarray,      # line centers (Å)
+    sigma_v_kms: ndarray,           # Gaussian sigma in km/s (scalar or array)
+    lum_line_erg_cm2: ndarray       # integrated fluxes (erg/s), array
+):
+    """
+    Returns the combined line spectrum S(λ) in Jy.
+    Gaussian profile defined in frequency domain but evaluated on λ grid.
+    """
+
+    # ---- Convert inputs to arrays ----
+    lambda_array = np.asarray(lambda_array, float)        # (Nλ,)
+    line_cents_array = np.asarray(line_cents_array, float)  # (Nlines,)
+    sigma_v_kms = np.asarray(sigma_v_kms, float)            # scalar or (Nlines,)
+    lum_line_erg_cm2 = np.asarray(lum_line_erg_cm2, float)  # (Nlines,)
+
+    lum_per_ang = lum_line_erg_cm2/line_cents_array
+
+    line_spec_vals = gaussian_adder(lambda_array, line_cents_array, lum_per_ang, sigma_v_kms)
+
+    return line_spec_vals
+
 if __name__ == "__main__":
     import re
     wavelengths = np.array([
@@ -91,9 +127,11 @@ if __name__ == "__main__":
     testx = np.linspace(200,10000,40000) * u.Angstrom
     out = gaussian_spectrum_from_integrated_flux_erg(testx, wavelengths, 150, F_values)
     testx_mic = (testx * (1+z_test)).to(u.micron)
-    plt.plot(testx_mic, out)
+    out2 = gaussian_luminosity(testx, wavelengths, 100, F_values)
+    plt.plot(testx, out2)
     # plt.xlim(0.5,6)
     # plt.ylim(-0.000001,0.00001)
-    plt.ylabel(r"$\mu \, Jy$")
+    plt.ylabel(r"erg s$^-1$ A$^-1$")
+    plt.xlabel("Angstrom")
     plt.show()
     print(f"{wavelengths}\n{F_values}")

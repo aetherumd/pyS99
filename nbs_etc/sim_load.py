@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 
+# TODO: Make all of this into a function
 # Path to the installed package
 merlin_path = os.path.dirname(merlin_spectra.__file__)
 
