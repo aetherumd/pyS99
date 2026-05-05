@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "silmaril"
+version = "0.0.1"
+description = "Library for generating synthetic observations of strongly lensed high-redshift galaxies"
+readme = "README.md"
+authors = [
+    { name = "Seyong Park" }
+]
+license = { text = "GPL" }
+requires-python = ">=3.8"
+
+dependencies = [
+    "scipy",
+    "numpy",
+    "matplotlib",
+    "astropy",
+    "tqdm",
+    "pandas",
+    "numba==0.59.1"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Natural Language :: English",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["tests"]
+
+[tool.setuptools.package-data]
+silmaril = [
+    "data/*.txt",
+    "data/*.dat",
+    "data/mean_throughputs/*.txt"
+]
