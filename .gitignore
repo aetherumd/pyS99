@@ -1,4 +1,4 @@
 sim_viz/
 graphs/
 .DS_store
-__pycache__/
+nbs_etc/__pycache__/
