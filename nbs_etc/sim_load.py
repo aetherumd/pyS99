@@ -3,6 +3,7 @@ from merlin_spectra.emission import EmissionLineInterpolator
 
 import os
 import copy
+import re
 
 import numpy as np
 from numpy import ndarray
@@ -13,45 +14,31 @@ import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 
-def sim_load():
+def sim_load(filename = "/Users/lamoreau/python/ASpec/SimulationFiles/output_00273/info_00273.txt", dens_normalized = True): #is density_normalized depricated
+    
     # Path to the installed package
+    # TODO: File selection GUI
     merlin_path = os.path.dirname(merlin_spectra.__file__)
-
+    print(merlin_path)
     # Path to the linelists folder inside MERLIN
     line_list = os.path.join(merlin_path, "linelists/linelist.dat")
 
-    print("MERLIN path:", merlin_path)
-    print("Line list path:", line_list)
+    # Path troubleshooting
+    # print("MERLIN path:", merlin_path)
+    # print("Line list path:", line_list)
 
-    filename = "/Users/lamoreau/python/ASpec/SimulationFiles/output_00273/info_00273.txt"
-    # need to make this a relative path that is consistant
-    # should be able to select files with GUI if we are going to have one
 
-    lines=["H1_6562.80A","O1_1304.86A","O1_6300.30A","O2_3728.80A","O2_3726.10A",
-        "O3_1660.81A","O3_1666.15A","O3_4363.21A","O3_4958.91A","O3_5006.84A", 
-        "He2_1640.41A","C2_1335.66A","C3_1906.68A","C3_1908.73A","C4_1549.00A",
-        "Mg2_2795.53A","Mg2_2802.71A","Ne3_3868.76A","Ne3_3967.47A",
-        "N5_1238.82A",
-        "N5_1242.80A","N4_1486.50A","N3_1749.67A","S2_6716.44A","S2_6730.82A"]
-
-    wavelengths=np.array([6562.80, 1304.86, 6300.30, 3728.80, 3726.10, 1660.81, 1666.15,
-                4363.21, 4958.91, 5006.84, 1640.41, 1335.66,
-                1906.68, 1908.73, 1549.00, 2795.53, 2802.71, 3868.76,
-                3967.47, 1238.82, 1242.80, 1486.50, 1749.67, 6716.44, 6730.82])
-
-    cell_fields = [
-        "Density",
-        "x-velocity",
-        "y-velocity",
-        "z-velocity",
-        "Pressure",
-        "Metallicity",
-        "xHI",
-        "xHII",
-        "xHeII",
-        "xHeIII",
-    ]
-
+    #load in the available lines from the header of the file
+    with open(line_list, 'r') as f:
+        raw_header = ''
+        for line in f:
+            if line.startswith('#'):
+                raw_header += line.lstrip('#').strip() + ' '
+            else:
+                break  # stop at first data line
+    entries = re.findall(r'([A-Za-z]+\d*)\s+([\d.]+A)', raw_header)
+    lines = [f"{ion}_{wl}" for ion, wl in entries]
+    wavelengths = [float(line.split("_")[1][:-1]) for line in lines]
     epf = [
         ("particle_family", "b"),
         ("particle_tag", "b"),
@@ -113,7 +100,7 @@ def sim_load():
     def _my_H_nuclei_density(field, data):
         dn=data["ramses","Density"].in_cgs()
         XH_RAMSES=0.76 #defined by RAMSES in cooling_module.f90
-        YHE_RAMSES=0.24 #defined by RAMSES in cooling_module.f90
+        YHE_RAMSES=0.24 #defined by RAMSES in cooling_module.f90 # is this used and if not why is it here
         mH_RAMSES=yt.YTArray(1.6600000e-24,"g") #defined by RAMSES in cooling_module.f90
 
         return dn*XH_RAMSES/mH_RAMSES
@@ -147,14 +134,8 @@ def sim_load():
         if 'hydro_xHeIII' in dir(ds.fields.ramses): # and \
             #'xHeIII' not in dir(ds.fields.ramses):
             return data['ramses', 'hydro_xHeIII']
-
-    '''
-    -------------------------------------------------------------------------------
-    Load Simulation Data
-    Add Derived Fields
-    -------------------------------------------------------------------------------
-    '''
-
+        
+    # derived field loading
     ds = yt.load(filename, extra_particle_fields=epf)
 
     ds.add_field(("gas","number_density"),
@@ -226,14 +207,12 @@ def sim_load():
     )
 
     # Normalize by Density Squared Flag
-    dens_normalized = True
     if dens_normalized: 
         units = '1/cm**6'
     else:
         units = '1'
 
     # Instance of EmissionLineInterpolator for line list at filename
-    # print(line_list) #see cell 2 above for details
     emission_interpolator = EmissionLineInterpolator(lines, line_list) #why is this interpolated? computational speedup?
 
     # Add flux and luminosity fields for all lines in the list
@@ -257,26 +236,28 @@ def sim_load():
             units='1/cm**3',
             force_override=True
         )
-    return ds
+    return ds, wavelengths
 
 
 if __name__ == "__main__":
+    ds, wavelengths = sim_load()
+    print("Wavelengths are", wavelengths)
     # --------------------------------------------
     # INPUT: list of emission lines (exact names)
     # --------------------------------------------
-    lines = np.array([
-        'H1 6562.80A', 'O1 1304.86A', 'O1 6300.30A', 'O2 3728.80A',
-        'O2 3726.10A', 'O3 1660.81A', 'O3 1666.15A', 'O3 4363.21A',
-        'O3 4958.91A', 'O3 5006.84A', 'He2 1640.41A', 'C2 1335.66A',
-        'C3 1906.68A', 'C3 1908.73A', 'C4 1549.00A', 'Mg2 2795.53A',
-        'Mg2 2802.71A', 'Ne3 3868.76A', 'Ne3 3967.47A', 'N5 1238.82A',
-        'N5 1242.80A', 'N4 1486.50A', 'N3 1749.67A', 'S2 6716.44A',
-        'S2 6730.82A'
-    ])
+    # lines = np.array([
+    #     'H1 6562.80A', 'O1 1304.86A', 'O1 6300.30A', 'O2 3728.80A',
+    #     'O2 3726.10A', 'O3 1660.81A', 'O3 1666.15A', 'O3 4363.21A',
+    #     'O3 4958.91A', 'O3 5006.84A', 'He2 1640.41A', 'C2 1335.66A',
+    #     'C3 1906.68A', 'C3 1908.73A', 'C4 1549.00A', 'Mg2 2795.53A',
+    #     'Mg2 2802.71A', 'Ne3 3868.76A', 'Ne3 3967.47A', 'N5 1238.82A',
+    #     'N5 1242.80A', 'N4 1486.50A', 'N3 1749.67A', 'S2 6716.44A',
+    #     'S2 6730.82A'
+    # ])
     # --------------------------------------------
     # Convert "O1 1304.86A" → "O1_1304.86A"
     # --------------------------------------------
-    lines = np.array([l.replace(" ", "_") for l in lines])
+    # lines = np.array([l.replace(" ", "_") for l in lines])
 
     # -------------------------------------------------------------------------
     # PREP: load all gas data and cell volume once (faster than inside loop)

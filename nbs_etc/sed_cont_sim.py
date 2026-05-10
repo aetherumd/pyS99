@@ -4,11 +4,12 @@ from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 from sim_load import sim_load
 
-def sed_cont_sim():
+
+def sed_cont_sim(ad):
     # TODO: Make all the functions dynamic
     dir_fil = '/Users/lamoreau/python/ASpec/Starburst99/'
-    ds = sim_load()
-    ad = ds.all_data()
+    
+    
     redsh0 = ds.current_redshift
 
     unit_t = ds.parameters["unit_t"]  # seconds
@@ -84,18 +85,21 @@ def sed_cont_sim():
 
 
 if __name__ == "__main__":
-    wav_obs0, a1, b1, y_tot0, redsh0 = sed_cont_sim()
+    from Fitser_v2 import JWST_disperser as disp
+    ds, wavelengths = sim_load()
+    ad = ds.all_data()
+    wav_obs0, a1, b1, y_tot0, redsh0 = sed_cont_sim(ad=ad)
+    disp_name = "prism"
+    prism = disp("prism")
+    pcent, bflux = prism.binner(y_tot0, wav_obs0[a1:b1])
     fig,axs = plt.subplots(1, 1, figsize=(6, 3.5), dpi=200)
     plt.subplots_adjust(hspace=0.85,top=0.95,right=0.95,bottom=0.13)
-    axs.plot(wav_obs0[a1:b1], y_tot0, label=f'(z={redsh0:2.2f})')
+    axs.plot(wav_obs0[a1:b1], y_tot0, label=f'(z={redsh0:2.2f})', lw = 1)
+    axs.step(pcent, bflux, where = "mid", label = f"Binned Flux in {disp_name} disperser", color = "red", lw = 1)
     axs.set_yscale('log')
-    #axs[0].set_yscale('linear')
     axs.set_xlim(0.5, 8)
-    #axs[0].set_ylim(1e-25,1e-20)
-    #axs.set_ylim(1e-5,1e-2)
     axs.set_ylim(1e-10,1e-4)
     axs.set_xlabel(r"$\lambda_{obs}/\mu$m")
-    #axs[0].set_ylabel(r"F$_\lambda(erg/s/cm^2/A)$")
     axs.set_ylabel(r"F$_\nu(\mu Jy)$")
     axs.legend(fontsize="6", loc ="lower right")
 
