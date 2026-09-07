@@ -8,7 +8,6 @@ from scipy import signal
 from scipy.interpolate import interp1d
 import astropy.units as u
 
-#ham
 #for now I am locally defining this across the board but I should make this its own thing in a file.io function library
 def searcher(start_path, dirname):
     """
@@ -239,20 +238,6 @@ class JWST_disperser:
 
         print(f"Simulated {len(pix_centers)} NIRSpec pixels "
             f"from {pix_centers[0]:.2f} to {pix_centers[-1]:.2f} μm")
-
-        # --- Plot ---
-        # TODO: delete this and make sure function returns all desired values
-        # plt.figure(figsize=(10,5))
-        # plt.plot(wave_hr, flux_hr, color="gray", alpha=0.6, label="High-res input")
-        # plt.plot(wave_hr, conv_flux_hr, color="blue", lw=1, label="After LSF convolution")
-        # plt.step(pix_centers, binned_flux, where="mid", color="red", label="Binned to NIRSpec pixels")
-        # plt.xlabel("Wavelength (μm)")
-        # plt.ylabel(r"Flux ($\mu$Jy)")
-        # plt.title(f"JWST NIRSpec Resolution & Binning ({dispname})")
-        # plt.xlim(0.5, 8)
-        # plt.legend()
-        # plt.tight_layout()
-        # plt.savefig(f"{figstore}JWST NIRSpec Resolution & Binning ({dispname})", transparent = True)
         #TODO
         #integrate overfluxes in each bin(how to do coherently without getting binning artifacts for small bins?)
         #make flux plot (histogram?, scatter? line? je ne sais quoi!)
@@ -261,6 +246,11 @@ class JWST_disperser:
 if __name__ == "__main__":
 
     g395h = JWST_disperser("g395m")
-    g395h.binner()
+    lams, flxs = g395h.binner()
+    plt.figure(figsize=(10,5))
+    plt.plot(lams,flxs,color="red")
+    plt.xlabel(r"$\lambda (\mu)$")
+    plt.ylabel(r'Jansky')
+    plt.show()
     
 

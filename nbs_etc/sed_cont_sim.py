@@ -27,6 +27,8 @@ def sed_cont_sim(ad):
     # Stellar ages and masses
     star_age_Myr = time_now_Myr - formation_time_Myr #t0 from Dr. Ricottis code
     star_mass = (star_mass_code * ds.mass_unit.to("Msun")).v * u.Msun #mass in dr ricottis code
+    print(f"Star mass in ad: {star_mass_code}, units are {star_mass_code.units}")
+    print(f"Star mass after conversion: {star_mass}, mass using ds.mass_unit.to('Msun') {ds.mass_unit.to('Msun')}")
     t0 = star_age_Myr.value
     mass = star_mass.value
 
@@ -63,6 +65,8 @@ def sed_cont_sim(ad):
     # TODO: break down what this means/why have it
     xf=1.0
     y1_obs0=np.array(xf*10**(y1-np.log10(4.*np.pi)-2*np.log10(d_L0))/(1+redsh0))
+    # this should be the same as saying divided by 4piLuminosity distance ^2 times (1+z)^2
+    # use the exponential form because we have the log luminosity
 
     # convert to uJy
     mag=1.0 # was 10
@@ -82,8 +86,8 @@ def sed_cont_sim(ad):
                 #print(wav_obs[a1],wav_obs[b1])
     return wav_obs0, a1, b1, y_tot0, redsh0
 
-
-
+def line_emis_sim(ad):
+    
 if __name__ == "__main__":
     from Fitser_v2 import JWST_disperser as disp
     ds, wavelengths = sim_load()
@@ -106,4 +110,4 @@ if __name__ == "__main__":
     plt.yscale('linear')
     plt.yscale('log')
 
-    plt.show()  
+    plt.show()

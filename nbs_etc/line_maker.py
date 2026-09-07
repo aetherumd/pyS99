@@ -4,7 +4,41 @@ from numpy import ndarray
 from astropy import units as u
 from astropy import constants as const
 
-def line_generator(wav_ray, lmbds, sigmas, lums): #maybe make ad ds????
+def line_generator(wav0, filename=None, ds=None, wavelengths=None): #maybe make ad ds????
+    if filename is None and ds is None:
+        ds, wavelengths = sim_load()
+    elif filename is not None:
+        ds, wavelengths = sim_load(filename=filename)
+    elif ds is None and wavelengths is not None or ds is None and wavelengths is not None:
+        #TODO: Make this a real error
+        print("Please pass both ds and wavelengths for full functionality")
+
+    #helped
+    # need to make some kind of caching for wavelengths once I get the 
+    for wl in wavelengths:
+        # Dynamically build regex: matches 'luminosity_', any string, the float formatted to 2 decimals, then 'A'
+        # We escape the dot (\.) so regex treats it as a literal decimal point
+        wl_str = f"{wl:.2f}".replace(".", r"\.")
+        pattern = re.compile(rf"^luminosity_.*{wl_str}A$")
+        
+        # Search ds.derived_field_list for a matching field tuple
+        # field[0] is the field type ('gas'), field[1] is the field name string
+        matches = [field for field in ds.derived_field_list if pattern.match(field[1])]
+        
+        if len(matches) == 1:
+            lum_fields.append(matches[0])
+        elif len(matches) > 1:
+            print(f"Ambiguous matches for wavelength {wl}: {matches}")
+        else:
+            print(f"No field found matching wavelength {wl}")
+
+    # 2. Extract and sum data exactly like your previous layout
+    # (Using ds.all_data() or your specific data container grid/box object)
+    ad = ds.all_data()
+    lum_data = np.vstack([ad[f] for f in lum_fields])  # shape: (Nlines, Ncells)
+    total_luminosities_box = lum_data.sum(axis=1).to_value()
+    
+    
     # TODO: Add distance correction
     # TODO: Explain unknown process in sigma_v to sigma_nu
 
@@ -15,6 +49,7 @@ def line_generator(wav_ray, lmbds, sigmas, lums): #maybe make ad ds????
     # funciton for wavelength shift
 
     # Determine series of functions that must be executed to create line spectrum
+    
 
     def ergcm2s_to_jyhz(F_erg_cm2_s):
         # 1 erg/s/cm^2 = 1e23 Jy Hz
@@ -67,5 +102,11 @@ def line_generator(wav_ray, lmbds, sigmas, lums): #maybe make ad ds????
         S_total = np.sum(S_each, axis=0)
 
         return S_total.to(u.uJy)
-    
-    gaussian_spectrum_from_integrated_flux_erg(wav_ray, lmbds, sigmas, lums)
+    lum0 = gaussian_spectrum_from_integrated_flux_erg(wav0, wavelengths, 100, total_luminosities_box)
+    z = ds.current_redshift()
+    flux = lum0/(4*np.pi*d_L**2) * (1+z)
+    wav0 = wav0 * (1+z)
+    return wav0, flux
+if __name__ == "__main__":
+    ds, wavelengths = sim_load()
+    line_generator(wav0, ds=ds, wavelengths=wavelengths)
